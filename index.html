@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Info Search</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Company Information Finder</h1>
+            <p>Enter a company name to get its logo and business description</p>
+        </header>
+        
+        <main>
+            <div class="search-container">
+                <form id="search-form">
+                    <input 
+                        type="text" 
+                        id="company-name" 
+                        placeholder="Enter company name (e.g., Microsoft, Apple, Tesla)" 
+                        required
+                    >
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            
+            <div class="results-container" id="results">
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Fetching company information...</p>
+                </div>
+                
+                <div id="error-message" class="hidden">
+                    <p>Sorry, we couldn't find information for that company. Please try another search.</p>
+                </div>
+                
+                <div id="company-info" class="hidden">
+                    <div class="logo-container">
+                        <img id="company-logo" src="" alt="Company Logo">
+                    </div>
+                    <div class="description-container">
+                        <h2 id="company-title"></h2>
+                        <p id="company-description"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Powered by AI - Created with Claude</p>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

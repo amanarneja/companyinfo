@@ -1,0 +1,61 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      if: false  # Disabled until tests are added
+      
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+        package: .
+        
+    - name: Set up Azure Key Vault secrets
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          # Get the managed identity ID of the web app
+          IDENTITY_PRINCIPAL_ID=$(az webapp identity show --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId --output tsv)
+          
+          # If identity is not assigned, assign it
+          if [ -z "$IDENTITY_PRINCIPAL_ID" ]; then
+            echo "Assigning managed identity to web app"
+            IDENTITY_PRINCIPAL_ID=$(az webapp identity assign --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId --output tsv)
+          fi
+          
+          # Grant the web app access to Key Vault secrets
+          az keyvault set-policy --name ${{ secrets.AZURE_KEYVAULT_NAME }} \
+            --object-id $IDENTITY_PRINCIPAL_ID \
+            --secret-permissions get list
+            
+          # Set the Key Vault name as an app setting
+          az webapp config appsettings set --name ${{ secrets.AZURE_WEBAPP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings KEY_VAULT_NAME=${{ secrets.AZURE_KEYVAULT_NAME }}
